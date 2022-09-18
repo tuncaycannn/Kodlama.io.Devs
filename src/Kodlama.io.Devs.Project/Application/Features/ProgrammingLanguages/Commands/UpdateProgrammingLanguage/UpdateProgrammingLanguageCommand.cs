@@ -17,6 +17,7 @@ namespace Application.Features.ProgrammingLanguages.Commands.UpdateProgrammingLa
     {
         public int Id { get; set; }
         public string Name { get; set; }
+        public bool Status { get; set; }
 
         public class UpdateProgrammingLanguageCommandHandler : IRequestHandler<UpdateProgrammingLanguageCommand, UpdateProgrammingLanguageDto>
         {
@@ -36,8 +37,8 @@ namespace Application.Features.ProgrammingLanguages.Commands.UpdateProgrammingLa
                 await _programmingLanguageBusinessRules.ProgrammingLanguageIdMustExist(request.Id);
 
                 ProgrammingLanguage mappedProgrammingLanguage = _mapper.Map<ProgrammingLanguage>(request);
-                ProgrammingLanguage createProgrammingLanguage = await _programmingLanguageRepository.UpdateAsync(mappedProgrammingLanguage);
-                UpdateProgrammingLanguageDto mappedUpdateProgrammingLanguageDto = _mapper.Map<UpdateProgrammingLanguageDto>(createProgrammingLanguage);
+                ProgrammingLanguage updateProgrammingLanguage = await _programmingLanguageRepository.UpdateAsync(mappedProgrammingLanguage);
+                UpdateProgrammingLanguageDto mappedUpdateProgrammingLanguageDto = _mapper.Map<UpdateProgrammingLanguageDto>(updateProgrammingLanguage);
 
                 return mappedUpdateProgrammingLanguageDto;
             }

@@ -1,4 +1,5 @@
-﻿using Domain.Entities;
+﻿using Core.Security.Entities;
+using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 
@@ -8,7 +9,11 @@ namespace Persistence.Contexts
     {
         protected IConfiguration Configuration { get; set; }
         public DbSet<ProgrammingLanguage> ProgrammingLanguages { get; set; }
-
+        public DbSet<Technology> Technologies { get; set; }
+        public DbSet<User> Users { get; set; }
+        public DbSet<OperationClaim> OperationClaims { get; set; }
+        public DbSet<UserOperationClaim> UserOperationClaims { get; set; }
+        public DbSet<UserSocialMedia> UserSocialMedias { get; set; }
 
         public BaseDbContext(DbContextOptions dbContextOptions, IConfiguration configuration) : base(dbContextOptions)
         {
@@ -24,19 +29,30 @@ namespace Persistence.Contexts
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            //modelBuilder.Entity<Brand>(a =>
-            //{
-            //    a.ToTable("Brands").HasKey(k => k.Id);
-            //    a.Property(p => p.Id).HasColumnName("Id");
-            //    a.Property(p => p.Name).HasColumnName("Name");
-            //});
+            modelBuilder.Entity<ProgrammingLanguage>(a =>
+            {
+                a.ToTable("Technologies").HasKey(k => k.Id);
+                a.Property(p => p.Id).HasColumnName("Id");
+                a.Property(p => p.Name).HasColumnName("Name");
+                a.Property(p => p.Status).HasColumnName("Status");
+            });
+
+            modelBuilder.Entity<Technology>(a =>
+            {
+                a.ToTable("ProgrammingLanguages").HasKey(k => k.Id);
+                a.Property(p => p.Id).HasColumnName("Id");
+                a.Property(p => p.ProgrammingLanguageId).HasColumnName("Id");
+                a.Property(p => p.Name).HasColumnName("Name");
+                a.Property(p => p.Status).HasColumnName("Status");
+                a.HasOne(p => p.ProgrammingLanguage);
+            });
+
+            ProgrammingLanguage[] programmingLanguageEntitySeeds = { new(1, "C#", true), new(2, "Java", true) };
+            modelBuilder.Entity<ProgrammingLanguage>().HasData(programmingLanguageEntitySeeds);
 
 
-
-            //Brand[] brandEntitySeeds = { new(1, "BMW"), new(2, "Mercedes") };
-            //modelBuilder.Entity<Brand>().HasData(brandEntitySeeds);
-
-           
+            Technology[] technologyEntitySeeds = { new(1, 1, ".Net", true), new(2,2 ,"Spring", true) };
+            modelBuilder.Entity<Technology>().HasData(technologyEntitySeeds);
         }
     }
 }

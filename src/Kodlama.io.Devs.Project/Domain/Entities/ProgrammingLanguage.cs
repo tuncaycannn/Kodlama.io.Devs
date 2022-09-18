@@ -10,7 +10,7 @@ namespace Domain.Entities
     public class ProgrammingLanguage : Entity
     {
         public string Name { get; set; }
-        public bool Status { get; set; }
+        public virtual ICollection<Technology> Technologies { get; set; }
         public ProgrammingLanguage()
         {
 
@@ -18,7 +18,7 @@ namespace Domain.Entities
         public ProgrammingLanguage(int id, string name, bool status) : this()
         {
             Id = id;
-            Name = Name;
+            Name = name;
             Status = status;
         }
     }

@@ -10,8 +10,9 @@ public class OperationClaim : Entity
     {
     }
 
-    public OperationClaim(int id, string name) : base(id)
+    public OperationClaim(int id, string name, bool status) : base(id, status)
     {
         Name = name;
+        Status = status;
     }
 }
