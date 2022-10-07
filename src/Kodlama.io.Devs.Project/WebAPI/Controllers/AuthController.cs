@@ -1,6 +1,8 @@
 ﻿using Application.Features.Auth.Commands.LoginUser;
 using Application.Features.Auth.Commands.RegisterUser;
 using Application.Features.Auth.Dtos;
+using Core.Security.Dtos;
+using Core.Security.Entities;
 using Microsoft.AspNetCore.Mvc;
 
 namespace WebAPI.Controllers
@@ -10,17 +12,44 @@ namespace WebAPI.Controllers
     public class AuthController : BaseController
     {
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginUserCommand loginUserCommand)
+        public async Task<IActionResult> Login([FromBody] UserForLoginDto userForLoginDto)
         {
-            LoginedDto result = await Mediator.Send(loginUserCommand);
-            return Ok(result);
+            LoginUserCommand loginUser = new()
+            {
+                loginedDto = userForLoginDto,
+                IpAddress = GetIpAddress()
+            };
+
+            LoginedDto result = await Mediator.Send(loginUser);
+            SetRefreshTokenToCookie(result.RefreshToken);
+
+            return Ok(result.AccessToken);
         }
 
-        [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] RegisterUserCommand registerUserCommand)
+        [HttpPost("Register")]
+        public async Task<IActionResult> Register([FromBody] UserForRegisterDto userForRegisterDto)
         {
-            RegisteredDto result = await Mediator.Send(registerUserCommand);
-            return Created("", result);
+            RegisterUserCommand registerCommand = new()
+            {
+                UserForRegisterDto = userForRegisterDto,
+                IpAddress = GetIpAddress()
+            };
+
+            RegisteredDto result = await Mediator.Send(registerCommand);
+            SetRefreshTokenToCookie(result.RefreshToken);
+
+            return Created("", result.AccessToken);
+        }
+
+        private void SetRefreshTokenToCookie(RefreshToken refreshToken)
+        {
+            CookieOptions cookieOptions = new()
+            {
+                HttpOnly = true,
+                Expires = DateTime.Now.AddDays(7)
+            };
+
+            Response.Cookies.Append("refreshToken", refreshToken.Token, cookieOptions);
         }
     }
 }

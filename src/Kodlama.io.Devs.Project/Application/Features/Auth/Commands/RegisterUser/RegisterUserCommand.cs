@@ -20,6 +20,7 @@ namespace Application.Features.Auth.Commands.RegisterUser
     public class RegisterUserCommand : IRequest<RegisteredDto>
     {
         public UserForRegisterDto UserForRegisterDto { get; set; }
+        public string IpAddress { get; set; }
 
         public class RegisterUserCommandHandler : IRequestHandler<RegisterUserCommand, RegisteredDto>
         {
@@ -38,19 +39,35 @@ namespace Application.Features.Auth.Commands.RegisterUser
 
             public async Task<RegisteredDto> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
             {
-                await _authBusinessRules.UserExists(request.UserForRegisterDto.Email);
+                await _authBusinessRules.EmailCanNotBeDublicateWhenRegistered(request.UserForRegisterDto.Email);
 
                 byte[] passwordHash, passwordSalt;
                 HashingHelper.CreatePasswordHash(request.UserForRegisterDto.Password, out passwordHash, out passwordSalt);
 
-                User user = _mapper.Map<User>(request);
-                User registerUser = await _userRepository.AddAsync(user);
+                User user = new()
+                {
+                    Email = request.UserForRegisterDto.Email,
+                    PasswordHash = passwordHash,
+                    PasswordSalt = passwordSalt,
+                    FirstName = request.UserForRegisterDto.FirstName,
+                    LastName = request.UserForRegisterDto.LastName,
+                    Status = true,
 
-                AccessToken createdAccessToken = await _authService.CreateAccessToken(registerUser);
+                };
+                User createUser = await _userRepository.AddAsync(user);
 
-                RegisteredDto registered = _mapper.Map<RegisteredDto>(createdAccessToken);
 
-                return registered;
+                AccessToken createdAccessToken = await _authService.CreateAccessToken(createUser);
+                RefreshToken createdRefreshToken = await _authService.CreateRefreshToken(createUser, request.IpAddress);
+                RefreshToken addedRefrehToken = await _authService.AddRefreshToken(createdRefreshToken);
+
+                RegisteredDto registeredDto = new()
+                {
+                    AccessToken = createdAccessToken,
+                    RefreshToken = addedRefrehToken
+                };
+
+                return registeredDto;
 
             }
         }

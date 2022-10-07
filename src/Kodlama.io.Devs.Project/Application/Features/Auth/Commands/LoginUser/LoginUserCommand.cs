@@ -12,6 +12,8 @@ namespace Application.Features.Auth.Commands.LoginUser
     public class LoginUserCommand : IRequest<LoginedDto>
     {
         public UserForLoginDto loginedDto { get; set; }
+        public string IpAddress { get; set; }
+
 
         public class LoginUserCommandHandler : IRequestHandler<LoginUserCommand, LoginedDto>
         {
@@ -31,7 +33,14 @@ namespace Application.Features.Auth.Commands.LoginUser
                 User user = await _businessRules.VerifyPasswordHash(request.loginedDto.Email, request.loginedDto.Password);
 
                 AccessToken createdAccessToken = await _authService.CreateAccessToken(user);
-                LoginedDto mappedUser = _mapper.Map<LoginedDto>(createdAccessToken);
+                RefreshToken createdRefreshToken = await _authService.CreateRefreshToken(user, request.IpAddress);
+                RefreshToken addedRefrehToken = await _authService.AddRefreshToken(createdRefreshToken);
+
+                LoginedDto mappedUser = new()
+                {
+                    AccessToken = createdAccessToken,
+                    RefreshToken = addedRefrehToken
+                };
 
                 return mappedUser;
             }

@@ -10,8 +10,9 @@ namespace Application.Services.AuthServices
 {
     public interface IAuthService
     {
-        Task<AccessToken> CreateAccessToken(User user);
-        Task<RefreshToken> RefreshAccessToken(User user);
+        public Task<AccessToken> CreateAccessToken(User user);
+        public Task<RefreshToken> CreateRefreshToken(User user, string ipAddress);
+        public Task<RefreshToken> AddRefreshToken(RefreshToken refreshToken);
 
     }
 }

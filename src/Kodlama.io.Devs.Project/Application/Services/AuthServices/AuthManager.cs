@@ -17,37 +17,43 @@ namespace Application.Services.AuthServices
     {
         private readonly IUserOperationClaimRepository _userOperationClaimRepository;
         private readonly ITokenHelper _tokenHelper;
-        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IRefreshTokenRepository _refreshTokenRepository;
 
-        public AuthManager(IUserOperationClaimRepository userOperationClaimRepository, ITokenHelper tokenHelper, IHttpContextAccessor httpContextAccessor)
+        public AuthManager(IUserOperationClaimRepository userOperationClaimRepository, ITokenHelper tokenHelper, IRefreshTokenRepository refreshTokenRepository)
         {
             _userOperationClaimRepository = userOperationClaimRepository;
             _tokenHelper = tokenHelper;
-            _httpContextAccessor = httpContextAccessor;
+            _refreshTokenRepository = refreshTokenRepository;
+        }
+
+        public async Task<RefreshToken> AddRefreshToken(RefreshToken refreshToken)
+        {
+            RefreshToken addedRefreshToken = await _refreshTokenRepository.AddAsync(refreshToken);
+            return addedRefreshToken;
+
         }
 
         public async Task<AccessToken> CreateAccessToken(User user)
         {
-            IPaginate<UserOperationClaim> userOperationClaims =
-           await _userOperationClaimRepository.GetListAsync(u => u.UserId == user.Id,
-                                                            include: u =>
-                                                                u.Include(u => u.OperationClaim)
-           );
+            IPaginate<UserOperationClaim> userOperationClaim =
+                await _userOperationClaimRepository.GetListAsync(u => u.UserId == user.Id,
+                                                                 include: u => u.Include(u => u.OperationClaim));
 
-            List<OperationClaim> operationClaims =
-               userOperationClaims.Items.Select(u => new OperationClaim
-               { Id = u.OperationClaim.Id, Name = u.OperationClaim.Name }).ToList();
+            IList<OperationClaim> operationClaims =
+                userOperationClaim.Items.Select(u => new OperationClaim
+                {
+                    Id = u.OperationClaimId,
+                    Name = u.OperationClaim.Name
+                }).ToList();
 
             AccessToken accessToken = _tokenHelper.CreateToken(user, operationClaims);
             return accessToken;
         }
 
-        public async Task<RefreshToken> RefreshAccessToken(User user)
+        public Task<RefreshToken> CreateRefreshToken(User user, string ipAddress)
         {
-            var ip = _httpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString();
-
-            RefreshToken accessToken = _tokenHelper.CreateRefreshToken(user, ip);
-            return accessToken;
+            RefreshToken refreshToken = _tokenHelper.CreateRefreshToken(user, ipAddress);
+            return Task.FromResult(refreshToken);
         }
     }
 }

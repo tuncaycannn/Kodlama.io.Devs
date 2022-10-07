@@ -7,9 +7,7 @@ using System.Threading.Tasks;
 
 namespace Application.Features.Auth.Dtos
 {
-    public class RegisteredDto
+    public class RegisteredDto : RefreshedTokenDto
     {
-        public AccessToken AccessToken { get; set; }
-        public DateTime Expiration { get; set; }
     }
 }

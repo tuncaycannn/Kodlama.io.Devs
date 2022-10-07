@@ -1,5 +1,6 @@
 ﻿using Application.Services.Repositories;
 using Core.CrossCuttingConcerns.Exceptions;
+using Core.Security.Entities;
 using Core.Security.Hashing;
 
 namespace Application.Features.Auth.Rules
@@ -13,7 +14,13 @@ namespace Application.Features.Auth.Rules
             _userRepository = userRepository;
         }
 
-        public async Task<Core.Security.Entities.User> GetByEmail(string email)
+        public async Task EmailCanNotBeDublicateWhenRegistered(string email)
+        {
+            User? user = await _userRepository.GetAsync(u => u.Email == email);
+            if (user != null) throw new BusinessException("Mail already exist!");
+        }
+
+        public async Task<User> GetByEmail(string email)
         {
             var result = await _userRepository.GetAsync(b => b.Email == email);
 
@@ -36,14 +43,5 @@ namespace Application.Features.Auth.Rules
             return user;
         }
 
-        public async Task<bool> UserExists(string email)
-        {
-            if (await GetByEmail(email) != null)
-            {
-                throw new BusinessException("User Exist");
-            }
-
-            return true;
-        }
     }
 }
